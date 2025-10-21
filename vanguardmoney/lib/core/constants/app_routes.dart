@@ -31,6 +31,7 @@ class AppRoutes {
   // ========== RUTAS DE PERFIL ==========
   static const String profile = '/profile';
   static const String editProfile = '/profile/edit';
+  static const String loginHistory = '/profile/login-history';
   static const String profileSettings = '/profile/settings';
   static const String profilePreferences = '/profile/preferences';
   static const String profileSecurity = '/profile/security';

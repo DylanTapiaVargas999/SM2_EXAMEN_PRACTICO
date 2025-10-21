@@ -6,6 +6,7 @@ import '../models/user_model.dart';
 import '../models/user_profile_model.dart';
 import '../../../core/exceptions/error_handler.dart';
 import '../../../core/exceptions/app_exception.dart';
+import 'login_history_service.dart';
 
 /// Repository que encapsula todas las operaciones de autenticación
 /// Usa el sistema centralizado de error handling (ErrorHandler + AppException)
@@ -13,6 +14,7 @@ class AuthRepository {
   final FirebaseAuth _firebaseAuth;
   final GoogleSignIn _googleSignIn;
   final FirebaseFirestore _firestore;
+  final LoginHistoryService _loginHistoryService;
 
   // StreamController para controlar manualmente las actualizaciones del usuario
   final StreamController<UserModel?> _userController =
@@ -22,9 +24,11 @@ class AuthRepository {
     FirebaseAuth? firebaseAuth,
     GoogleSignIn? googleSignIn,
     FirebaseFirestore? firestore,
+    LoginHistoryService? loginHistoryService,
   }) : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance,
        _googleSignIn = googleSignIn ?? GoogleSignIn(),
-       _firestore = firestore ?? FirebaseFirestore.instance {
+       _firestore = firestore ?? FirebaseFirestore.instance,
+       _loginHistoryService = loginHistoryService ?? LoginHistoryService() {
     // Escuchar cambios en Firebase Auth y propagar al stream personalizado
     _firebaseAuth.authStateChanges().listen((User? user) {
       final userModel = user != null ? UserModel.fromFirebaseUser(user) : null;
@@ -76,6 +80,13 @@ class AuthRepository {
 
       // Login exitoso - reiniciar intentos fallidos
       await resetLoginAttempts(result.user!.uid);
+
+      // Registrar el inicio de sesión en el historial
+      await _loginHistoryService.registerLogin(
+        userId: result.user!.uid,
+        email: result.user!.email ?? email,
+        displayName: result.user!.displayName ?? 'Usuario',
+      );
 
       return UserModel.fromFirebaseUser(result.user!);
     } catch (e, stackTrace) {
@@ -196,6 +207,13 @@ class AuthRepository {
 
       // Crear o actualizar perfil en Firestore con información de Google
       await _createOrUpdateGoogleUserProfile(result.user!, googleUser);
+
+      // Registrar el inicio de sesión en el historial
+      await _loginHistoryService.registerLogin(
+        userId: result.user!.uid,
+        email: result.user!.email ?? '',
+        displayName: result.user!.displayName ?? 'Usuario',
+      );
 
       return UserModel.fromFirebaseUser(result.user!);
     } catch (e) {

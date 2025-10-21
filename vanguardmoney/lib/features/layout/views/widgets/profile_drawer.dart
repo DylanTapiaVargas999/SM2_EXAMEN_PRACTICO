@@ -44,6 +44,14 @@ class ProfileDrawer extends ConsumerWidget {
                 ),
                 _buildMenuItem(
                   context,
+                  Icons.history,
+                  Icons.history,
+                  'Historial de Sesiones',
+                  () => context.push(AppRoutes.loginHistory),
+                  color: AppColors.blueLavender,
+                ),
+                _buildMenuItem(
+                  context,
                   Icons.attach_money_outlined,
                   Icons.attach_money,
                   'Configurar Moneda',
